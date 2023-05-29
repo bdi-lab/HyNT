@@ -24,6 +24,7 @@ We used NVIDIA RTX A6000 and NVIDIA GeForce RTX 3090 for all our experiments.
 We provide checkpoints for link prediction results, relation prediction results, and numeric value prediction results on HN-WK, HN-YG, HN-FB, and HN-FB-S. Checkpoints for link prediction results on WD50K and WikiPeople^{--} are also provided.
 
 You can download the checkpoints in https://drive.google.com/file/d/1EUg7n5vsfnrT-R0B6851y7RJvjeWYTyo/view?usp=sharing
+
 For usage, place the unzipped checkpoint folder in the same directory with the codes.
 
 The commands we used to get the results in our paper using the provided checkpoints:
