@@ -107,19 +107,19 @@ To train HyNT, run `train.py` with arguments.
 
 Default argument values are the best hyperparameter of HyNT on HN-WK.
 
-The list of arguments and their brief descriptions:
---data: name of the dataset. Ex. HN-WK, HN-YG
---lr: learning rate. Ex. 1e-3
---dim: $d=\hat{d}$
---num_epoch: total number of training epochs.
---valid_epoch: the duration of validation.
---exp: experiment name.
---num_layer: $L_\mathrm{P}=L_\mathrm{C}$
---num_head: $n_\mathrm{P}=n_\mathrm{C}$
---hidden_dim: $d_\mathrm{F}=\hat{d}_\mathrm{F}$
---dropout: $\delta$
---smoothing: $\epsilon$
---batch_size: the batch size.
+The list of arguments and their brief descriptions:\\
+--data: name of the dataset. Ex. HN-WK, HN-YG\\
+--lr: learning rate. Ex. 1e-3\\
+--dim: $d=\hat{d}$\\
+--num_epoch: total number of training epochs.\\
+--valid_epoch: the duration of validation.\\
+--exp: experiment name.\\
+--num_layer: $L_\mathrm{P}=L_\mathrm{C}$\\
+--num_head: $n_\mathrm{P}=n_\mathrm{C}$\\
+--hidden_dim: $d_\mathrm{F}=\hat{d}_\mathrm{F}$\\
+--dropout: $\delta$\\
+--smoothing: $\epsilon$\\
+--batch_size: the batch size.\\
 --step_size: the step size of the cosine annealing learning rate scheduler.
 
 Refer to our paper for notations.
