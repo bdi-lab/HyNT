@@ -125,7 +125,7 @@ The list of arguments of 'train.py':
 - `--step_size`: the step size of the cosine annealing learning rate scheduler
 
 ### Hyperparameters
-We tuned HyNT with the following (except HN-FB, where we fixed the batch_size to 512):
+We tuned HyNT with the following tuning range:
 - lr: {0.0005, 0.001}
 - dim: 256
 - num_epoch: 750
@@ -135,5 +135,5 @@ We tuned HyNT with the following (except HN-FB, where we fixed the batch_size to
 - hidden_dim: 1024
 - dropout: {0.1, 0.2}
 - smoothing: {0.3, 0.5, 0.7}
-- batch_size: {1024, 2048}
+- batch_size: {1024, 2048} (We fixed the batch_size to 512 for HN-FB, the largest dataset.)
 - step_size: {50, 100}
