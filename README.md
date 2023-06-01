@@ -24,7 +24,7 @@ You can install all requirements with:
 pip install -r requirements.txt
 ```
 
-## Reproducing Results
+## Reproducing the Reported Results
 
 We used NVIDIA RTX A6000 and NVIDIA GeForce RTX 3090 for all our experiments. We provide the checkpoints to produce the link prediction, relation prediction, and numeric value prediction results on HN-WK, HN-YG, HN-FB, and HN-FB-S. The checkpoints are also provided for the link prediction results on WD50K and WikiPeople<sup>$\mathbf{-}$</sup>. If you want to use the checkpoints, place the unzipped checkpoint folder in the same directory with the codes.
 
@@ -106,9 +106,9 @@ python3 eval.py --data WD50K --lr 1e-3 --dim 256 --epoch 350 --exp lp_nvp --num_
 
 ## Training from Scratch
 
-To train HyNT from scratch, run `train.py` with arguments.
+To train HyNT from scratch, run `train.py` with arguments. Please refer to `train.py` or `eval.py` for the examples of the arguments.
 
-The list of arguments of 'train.py' and their brief descriptions:
+The list of arguments of 'train.py':
 - `--data`: name of the dataset
 - `--lr`: learning rate
 - `--dim`: $d=\hat{d}$
@@ -123,8 +123,6 @@ The list of arguments of 'train.py' and their brief descriptions:
 - `--smoothing`: $\epsilon$
 - `--batch_size`: the batch size
 - `--step_size`: the step size of the cosine annealing learning rate scheduler
-
-Please refer to `train.py` or `eval.py` for the examples of the arguments.
 
 ### Hyperparameters
 We tuned HyNT with the following (except HN-FB, where we fixed the batch_size to 512):
