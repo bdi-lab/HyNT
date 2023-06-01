@@ -1,13 +1,13 @@
 # Representation Learning on Hyper-Relational and Numeric Knowledge Graphs with Transformers
-This code is the official implementation of our paper "Representation Learning on Hyper-Relational and Numeric Knowledge Graphs with Transformers (KDD 2023)".
+This code is the official implementation of the following [paper](https://arxiv.org/abs/2305.18256):
 
-> Chanyoung Chung, Jaejun Lee and Joyce Jiyoung Whang, Representation Learning on Hyper-Relational and Numeric Knowledge Graphs with Transformers, To appear in 29th ACM SIGKDD Conference on Knowledge Discovery and Data Mining (KDD '23), 2023.
+> Chanyoung Chung, Jaejun Lee and Joyce Jiyoung Whang, Representation Learning on Hyper-Relational and Numeric Knowledge Graphs with Transformers, To appear in 29th ACM SIGKDD Conference on Knowledge Discovery and Data Mining (KDD), 2023.
 
 Codes written by Jaejun Lee (jjlee98@kaist.ac.kr).
 
 If you use this code or data, please cite our paper.
 ```bibtex
-@article{kdd2023hynt,
+@article{hynt,
 	author={Chanyoung Chung and Jaejun Lee and Joyce Jiyoung Whang},
 	title={Representation Learning on Hyper-Relational and Numeric Knowledge Graphs with Transformers},
 	year={2023},
@@ -30,13 +30,13 @@ pip install -r requirements.txt
 
 We used NVIDIA RTX A6000 and NVIDIA GeForce RTX 3090 for all our experiments.
 
-We provide checkpoints for link prediction results, relation prediction results, and numeric value prediction results on HN-WK, HN-YG, HN-FB, and HN-FB-S. Checkpoints for link prediction results on WD50K and WikiPeople^{--} are also provided.
+We provide the checkpoints we used to produce the link prediction results, relation prediction results, and numeric value prediction results on HN-WK, HN-YG, HN-FB, and HN-FB-S. The checkpoints we used to produce the link prediction results on WD50K and WikiPeople<sup>$\mathbf{-}$</sup> are also provided.
 
-You can download the checkpoints in https://drive.google.com/file/d/1EUg7n5vsfnrT-R0B6851y7RJvjeWYTyo/view?usp=sharing
+You can download the checkpoints in https://drive.google.com/file/d/1EUg7n5vsfnrT-R0B6851y7RJvjeWYTyo/view?usp=sharing.
 
 For usage, place the unzipped checkpoint folder in the same directory with the codes.
 
-The commands we used to get the results in our paper using the provided checkpoints:
+The commands to reproduce the results in our paper:
 
 ### HN-WK
 
@@ -112,23 +112,36 @@ python3 eval.py --data WD50K --lr 1e-3 --dim 256 --epoch 350 --exp lp_nvp --num_
 
 ## Training from Scratch
 
-To train HyNT, run `train.py` with arguments.
+To train HyNT from scratch, run `train.py` with arguments.
 
-Default argument values are the best hyperparameter of HyNT on HN-WK.
+The list of arguments of 'train.py' and their brief descriptions:
+- `--data`: name of the dataset
+- `--lr`: learning rate
+- `--dim`: $d=\hat{d}$
+- `--num_epoch`: total number of training epochs (only used for train.py)
+- `--epoch`: the epoch to evaluate (only used for eval.py)
+- `--valid_epoch`: the duration of validation
+- `--exp`: experiment name
+- `--num_layer`: $L_\mathrm{P}=L_\mathrm{C}$
+- `--num_head`: $n_\mathrm{P}=n_\mathrm{C}$
+- `--hidden_dim`: $d_\mathrm{F}=\hat{d}_\mathrm{F}$
+- `--dropout`: $\delta$
+- `--smoothing`: $\epsilon$
+- `--batch_size`: the batch size
+- `--step_size`: the step size of the cosine annealing learning rate scheduler
 
-The list of arguments and their brief descriptions:\
---data: name of the dataset. Ex. HN-WK, HN-YG\
---lr: learning rate. Ex. 1e-3\
---dim: $d=\hat{d}$\
---num_epoch: total number of training epochs.\
---valid_epoch: the duration of validation.\
---exp: experiment name.\
---num_layer: $L_\mathrm{P}=L_\mathrm{C}$\
---num_head: $n_\mathrm{P}=n_\mathrm{C}$\
---hidden_dim: $d_\mathrm{F}=\hat{d}_\mathrm{F}$\
---dropout: $\delta$\
---smoothing: $\epsilon$\
---batch_size: the batch size.\
---step_size: the step size of the cosine annealing learning rate scheduler.
+Please refer to `train.py` or `eval.py` for the examples of the arguments.
 
-Refer to our paper for notations.
+### Hyperparameters
+We tuned HyNT with the following (except HN-FB, where we fixed the batch_size to 512):
+- lr: {0.0005, 0.001}
+- dim: 256
+- num_epoch: 750
+- valid_epoch: 50
+- num_layer: {2, 3}
+- num_head: {4, 8, 16}
+- hidden_dim: 1024
+- dropout: {0.1, 0.2}
+- smoothing: {0.3, 0.5, 0.7}
+- batch_size: {1024, 2048}
+- step_size: {50, 100}
