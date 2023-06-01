@@ -1,11 +1,20 @@
 # Representation Learning on Hyper-Relational and Numeric Knowledge Graphs with Transformers
-This code is an implementation of the paper, "Representation Learning on Hyper-Relational and Numeric Knowledge Graphs with Transformers (KDD 2023)".
+This code is the official implementation of our paper "Representation Learning on Hyper-Relational and Numeric Knowledge Graphs with Transformers (KDD 2023)".
 
-Codes written by Jaejun Lee (jjlee98@kaist.ac.kr)
+> Chanyoung Chung, Jaejun Lee and Joyce Jiyoung Whang, Representation Learning on Hyper-Relational and Numeric Knowledge Graphs with Transformers, To appear in 29th ACM SIGKDD Conference on Knowledge Discovery and Data Mining (KDD '23), 2023.
+
+Codes written by Jaejun Lee (jjlee98@kaist.ac.kr).
 
 If you use this code or data, please cite our paper.
-
-> Chanyoung Chung, Jaejun Lee and Joyce Jiyoung Whang, Representation Learning on Hyper-Relational and Numeric Knowledge Graphs with Transformers, 29th ACM SIGKDD Conference on Knowledge Discovery and Data Mining (KDD '23), 2023.
+```bibtex
+@article{kdd2023hynt,
+	author={Chanyoung Chung and Jaejun Lee and Joyce Jiyoung Whang},
+	title={Representation Learning on Hyper-Relational and Numeric Knowledge Graphs with Transformers},
+	year={2023},
+	journal={arXiv preprint arXiv:2305.18256},
+	doi={10.48550/arXiv.2305.18256}
+}
+```
 
 ## Requirements
 
@@ -13,7 +22,7 @@ We used python 3.7 and PyTorch 1.12.0 with cudatoolkit 11.3.
 
 You can install all requirements with:
 
-```setup
+```shell
 pip install -r requirements.txt
 ```
 
