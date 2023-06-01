@@ -134,6 +134,6 @@ We tuned HyNT with the following tuning range:
 - num_head: {4, 8, 16}
 - hidden_dim: 1024
 - dropout: {0.1, 0.2}
-- smoothing: {0.3, 0.5, 0.7}
+- smoothing: {0.3, 0.4, 0.5, 0.7}
 - batch_size: {1024, 2048} (We fixed the batch_size to 512 for HN-FB, the largest dataset.)
 - step_size: {50, 100}
