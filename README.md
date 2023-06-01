@@ -3,7 +3,7 @@ This code is the official implementation of the following [paper](https://arxiv.
 
 > Chanyoung Chung, Jaejun Lee, and Joyce Jiyoung Whang, Representation Learning on Hyper-Relational and Numeric Knowledge Graphs with Transformers, To appear in the 29th ACM SIGKDD Conference on Knowledge Discovery and Data Mining (KDD), 2023.
 
-Codes are written by Jaejun Lee (jjlee98@kaist.ac.kr). When you use this code or data, please cite our paper.
+All codes are written by Jaejun Lee (jjlee98@kaist.ac.kr). When you use this code or data, please cite our paper.
 ```bibtex
 @article{hynt,
 	author={Chanyoung Chung and Jaejun Lee and Joyce Jiyoung Whang},
