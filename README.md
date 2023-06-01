@@ -26,13 +26,9 @@ pip install -r requirements.txt
 
 ## Reproducing Results
 
-We used NVIDIA RTX A6000 and NVIDIA GeForce RTX 3090 for all our experiments.
+We used NVIDIA RTX A6000 and NVIDIA GeForce RTX 3090 for all our experiments. We provide the checkpoints to produce the link prediction, relation prediction, and numeric value prediction results on HN-WK, HN-YG, HN-FB, and HN-FB-S. The checkpoints are also provided for the link prediction results on WD50K and WikiPeople<sup>$\mathbf{-}$</sup>. If you want to use the checkpoints, place the unzipped checkpoint folder in the same directory with the codes.
 
-We provide the checkpoints we used to produce the link prediction results, relation prediction results, and numeric value prediction results on HN-WK, HN-YG, HN-FB, and HN-FB-S. The checkpoints we used to produce the link prediction results on WD50K and WikiPeople<sup>$\mathbf{-}$</sup> are also provided.
-
-You can download the checkpoints in https://drive.google.com/file/d/1EUg7n5vsfnrT-R0B6851y7RJvjeWYTyo/view?usp=sharing.
-
-For usage, place the unzipped checkpoint folder in the same directory with the codes.
+You can download the checkpoints from https://drive.google.com/file/d/1EUg7n5vsfnrT-R0B6851y7RJvjeWYTyo/view?usp=sharing.
 
 The commands to reproduce the results in our paper:
 
