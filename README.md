@@ -1,16 +1,17 @@
 # Representation Learning on Hyper-Relational and Numeric Knowledge Graphs with Transformers
 This code is the official implementation of the following [paper](https://arxiv.org/abs/2305.18256):
 
-> Chanyoung Chung, Jaejun Lee, and Joyce Jiyoung Whang, Representation Learning on Hyper-Relational and Numeric Knowledge Graphs with Transformers, To appear in the 29th ACM SIGKDD Conference on Knowledge Discovery and Data Mining (KDD), 2023.
+> Chanyoung Chung, Jaejun Lee, and Joyce Jiyoung Whang, Representation Learning on Hyper-Relational and Numeric Knowledge Graphs with Transformers, The 29th ACM SIGKDD Conference on Knowledge Discovery and Data Mining (KDD), 2023.
 
 All codes are written by Jaejun Lee (jjlee98@kaist.ac.kr). When you use this code or data, please cite our paper.
 ```bibtex
-@article{hynt,
+@inproceedings{hynt,
 	author={Chanyoung Chung and Jaejun Lee and Joyce Jiyoung Whang},
 	title={Representation Learning on Hyper-Relational and Numeric Knowledge Graphs with Transformers},
+	booktitle={Proceedings of the 29th ACM SIGKDD Conference on Knowledge Discovery and Data Mining},
 	year={2023},
-	journal={arXiv preprint arXiv:2305.18256},
-	doi={10.48550/arXiv.2305.18256}
+	pages={310--322},
+	doi={10.1145/3580305.3599490}
 }
 ```
 
