@@ -138,3 +138,7 @@ We tuned HyNT with the following tuning range:
 - smoothing: {0.3, 0.4, 0.5, 0.7}
 - batch_size: {1024, 2048} (We fixed the batch_size to 512 for HN-FB, the largest dataset.)
 - step_size: {50, 100}
+
+## Generating Datasets
+
+You can download the codes for generating datasets from https://drive.google.com/file/d/1NOThGP_wXdQeGgEGut3Pzn-Jth96jIIs/view?usp=sharing.
