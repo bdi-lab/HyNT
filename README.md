@@ -15,6 +15,16 @@ All codes are written by Jaejun Lee (jjlee98@kaist.ac.kr). When you use this cod
 }
 ```
 
+## Updates
+
+We have re-uploaded our codes after fixing a bug in filter_dict. The link prediction results on HN-KGs need to be updated, while the other experimental results remain the same. Tentatively, we report the updated results on HN-WK below with limited parameter tuning. We will release the full updated results and the checkpoints as soon as possible.
+
+Link Prediction on the Primary Triplets in HN-WK (Updated)\
+MRR: 0.3025 / Hit10: 0.5037 / Hit3: 0.3214 / Hit1: 0.2075
+
+Link Prediction on All Entities of the Hyper-Relational Facts in HN-WK (Updated)\
+MRR: 0.3234 / Hit10: 0.5216 / Hit3: 0.3439 / Hit1: 0.2294
+
 ## Requirements
 
 We used python 3.7 and PyTorch 1.12.0 with cudatoolkit 11.3.
