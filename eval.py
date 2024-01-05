@@ -119,11 +119,17 @@ for tri, tri_pad, tri_num in tqdm(zip(KG.test, KG.test_pad, KG.test_num), total 
             test_triplet[0,2*ent_idx] = KG.num_ent+KG.num_rel
             filt_tri = copy.deepcopy(tri)
             filt_tri[ent_idx*2] = 2*(KG.num_ent+KG.num_rel)
-            re_pair = [(filt_tri[0], filt_tri[1], filt_tri[2])]
+            if ent_idx != 1 and filt_tri[2] >= KG.num_ent:
+                re_pair = [(filt_tri[0], filt_tri[1], filt_tri[1] * 2 + tri_num[0])]
+            else:
+                re_pair = [(filt_tri[0], filt_tri[1], filt_tri[2])]
             for qual_idx,(q,v) in enumerate(zip(filt_tri[3::2], filt_tri[4::2])):
                 if tri_pad[qual_idx+1]:
                     break
-                re_pair.append((q,v))
+                if ent_idx != qual_idx + 2 and v >= KG.num_ent:
+                    re_pair.append((q, q*2 + tri_num[qual_idx + 1]))
+                else:
+                    re_pair.append((q,v))
             re_pair.sort()
             filt = KG.filter_dict[tuple(re_pair)]
             score_ent, _, _ = model(test_triplet.cuda(), torch.tensor([tri_num]).cuda(), torch.tensor([tri_pad]).cuda(), mask_locs)
@@ -142,16 +148,23 @@ for tri, tri_pad, tri_num in tqdm(zip(KG.test, KG.test_pad, KG.test_num), total 
             mask_locs = torch.full((1,(KG.max_len-3)//2+1), False)
             mask_locs[0,rel_idx] = True
             test_triplet = torch.tensor([tri])
+            orig_rels = tri[1::2]
             test_triplet[0, rel_idx*2 + 1] = KG.num_rel
             if test_triplet[0, rel_idx*2+2] >= KG.num_ent:
                 test_triplet[0, rel_idx*2 + 2] = KG.num_ent + KG.num_rel
             filt_tri = copy.deepcopy(tri)
             filt_tri[rel_idx*2+1] = 2*(KG.num_ent+KG.num_rel)
-            re_pair = [(filt_tri[0], filt_tri[1], filt_tri[2])]
+            if filt_tri[2] >= KG.num_ent:
+                re_pair = [(filt_tri[0], filt_tri[1], orig_rels[0]*2 + tri_num[0])]
+            else:
+                re_pair = [(filt_tri[0], filt_tri[1], filt_tri[2])]
             for qual_idx,(q,v) in enumerate(zip(filt_tri[3::2], filt_tri[4::2])):
                 if tri_pad[qual_idx+1]:
                     break
-                re_pair.append((q,v))
+                if v >= KG.num_ent:
+                    re_pair.append((q, orig_rels[qual_idx + 1]*2 + tri_num[qual_idx + 1]))
+                else:
+                    re_pair.append((q,v))
             re_pair.sort()
             filt = KG.filter_dict[tuple(re_pair)]
             _,score_rel, _ = model(test_triplet.cuda(), torch.tensor([tri_num]).cuda(), torch.tensor([tri_pad]).cuda(), mask_locs)
