@@ -207,13 +207,18 @@ class HNKG(Dataset):
 
     def construct_filter_dict(self):
         res = {}
-        for data, data_len in [[self.train, self.train_len],[self.valid, self.valid_len],[self.test, self.test_len]]:
-            for triplet, triplet_len in zip(data, data_len):
-
+        for data, data_len, data_num in [[self.train, self.train_len, self.train_num],[self.valid, self.valid_len, self.valid_num],[self.test, self.test_len, self.test_num]]:
+            for triplet, triplet_len, triplet_num in zip(data, data_len, data_num):
                 real_triplet = copy.deepcopy(triplet[:triplet_len])
-                re_pair = [(real_triplet[0], real_triplet[1], real_triplet[2])]
-                for q,v in zip(real_triplet[3::2], real_triplet[4::2]):
-                    re_pair.append((q,v))
+                if real_triplet[2] < self.num_ent:
+                    re_pair = [(real_triplet[0], real_triplet[1], real_triplet[2])]
+                else:
+                    re_pair = [(real_triplet[0], real_triplet[1], real_triplet[1]*2 + triplet_num[0])]
+                for idx, (q,v) in enumerate(zip(real_triplet[3::2], real_triplet[4::2])):
+                    if v <self.num_ent:
+                        re_pair.append((q, v))
+                    else:
+                        re_pair.append((q, q*2 + triplet_num[idx + 1]))
                 for i, pair in enumerate(re_pair):
                     for j, anything in enumerate(pair):
                         filtered_filter = copy.deepcopy(re_pair)
