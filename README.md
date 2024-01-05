@@ -15,7 +15,7 @@ All codes are written by Jaejun Lee (jjlee98@kaist.ac.kr). When you use this cod
 }
 ```
 
-## Updates
+## Updates on Jan. 5th, 2024
 
 We have re-uploaded our codes after fixing a bug in filter_dict. The link prediction results on HN-KGs need to be updated, while the other experimental results remain the same. Tentatively, we report the updated results on HN-WK below with limited parameter tuning. We will release the full updated results and the checkpoints as soon as possible.
 
