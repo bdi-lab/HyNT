@@ -24,19 +24,21 @@ np.random.seed(0)
 
 parser = argparse.ArgumentParser()
 parser.add_argument('--data', default = "HN-WK", type = str)
-parser.add_argument('--lr', default=1e-3, type=float)
+parser.add_argument('--lr', default=4e-4, type=float)
 parser.add_argument('--dim', default=256, type=int)
-parser.add_argument('--num_epoch', default=1500, type=int)
-parser.add_argument('--valid_epoch', default=50, type=int)
-parser.add_argument('--exp', default='Link_Prediction')
+parser.add_argument('--num_epoch', default=1050, type=int)
+parser.add_argument('--valid_epoch', default=150, type=int)
+parser.add_argument('--exp', default='Reproduce')
 parser.add_argument('--no_write', action='store_true')
-parser.add_argument('--num_layer', default=3, type=int)
-parser.add_argument('--num_head', default=16, type=int)
-parser.add_argument('--hidden_dim', default = 1024, type = int)
-parser.add_argument('--dropout', default = 0.1, type = float)
-parser.add_argument('--smoothing', default = 0.45, type = float)
-parser.add_argument('--batch_size', default = 2048, type = int)
-parser.add_argument('--step_size', default = 100, type = int)
+parser.add_argument('--num_enc_layer', default=4, type=int)
+parser.add_argument('--num_dec_layer', default=4, type=int)
+parser.add_argument('--num_head', default=8, type=int)
+parser.add_argument('--hidden_dim', default = 2048, type = int)
+parser.add_argument('--dropout', default = 0.15, type = float)
+parser.add_argument('--smoothing', default = 0.4, type = float)
+parser.add_argument('--batch_size', default = 1024, type = int)
+parser.add_argument('--step_size', default = 150, type = int)
+parser.add_argument('--emb_as_proj', action = 'store_true')
 args = parser.parse_args()
 
 
@@ -50,8 +52,10 @@ model = HyNT(
     dim_model = args.dim,
     num_head = args.num_head,
     dim_hid = args.hidden_dim,
-    num_layer = args.num_layer,
-    dropout = args.dropout
+    num_enc_layer = args.num_enc_layer,
+    num_dec_layer = args.num_dec_layer,
+    dropout = args.dropout,
+    emb_as_proj = args.emb_as_proj
 ).cuda()
 
 criterion = nn.CrossEntropyLoss(label_smoothing = args.smoothing)
@@ -62,9 +66,12 @@ optimizer = torch.optim.Adam(model.parameters(), lr=args.lr)
 scheduler = torch.optim.lr_scheduler.CosineAnnealingWarmRestarts(optimizer, args.step_size, T_mult = 2)
 
 file_format = f"{args.exp}/{args.data}/lr_{args.lr}_dim_{args.dim}_" + \
-              f"layer_{args.num_layer}_head_{args.num_head}_hid_{args.hidden_dim}_" + \
+              f"elayer_{args.num_enc_layer}_dlayer_{args.num_dec_layer}_head_{args.num_head}_hid_{args.hidden_dim}_" + \
               f"drop_{args.dropout}_smoothing_{args.smoothing}_batch_{args.batch_size}_" + \
               f"steplr_{args.step_size}"
+
+if args.emb_as_proj:
+    file_format += "_embproj"
 
 if not args.no_write:
     os.makedirs(f"./result/{args.exp}/{args.data}/", exist_ok=True)
@@ -136,148 +143,149 @@ for epoch in range(args.num_epoch):
         nvp_tri_se_num = 0
         nvp_all_se = 0
         nvp_all_se_num = 0
-        for tri, tri_pad, tri_num in tqdm(zip(KG.test, KG.test_pad, KG.test_num), total = len(KG.test)):
+        with torch.no_grad():
+            for tri, tri_pad, tri_num in tqdm(zip(KG.test, KG.test_pad, KG.test_num), total = len(KG.test)):
 
-            tri_len = len(tri)
-            pad_idx = 0
-            for ent_idx in range((tri_len+1)//2):
-                if tri_pad[pad_idx]:
-                    break
-                if ent_idx != 0:
-                    pad_idx += 1
-                test_triplet = torch.tensor([tri])
-                
-                mask_locs = torch.full((1,(KG.max_len-3)//2+1), False)
-                if ent_idx < 2:
-                    mask_locs[0,0] = True
-                else:
-                    mask_locs[0,ent_idx-1] = True
-                if tri[ent_idx*2] >= KG.num_ent:
-                    assert ent_idx != 0
-                    test_num = torch.tensor([tri_num])
-                    test_num[0,ent_idx-1] = -1
-                    _,_,score_num = model(test_triplet.cuda(), test_num.cuda(), torch.tensor([tri_pad]).cuda(), mask_locs)
-                    score_num = score_num.detach().cpu().numpy()
-                    if ent_idx == 1:
-                        sq_error = (score_num[0,3,tri[ent_idx*2]-KG.num_ent] - tri_num[ent_idx-1])**2
-                        nvp_tri_se += sq_error
-                        nvp_tri_se_num += 1
+                tri_len = len(tri)
+                pad_idx = 0
+                for ent_idx in range((tri_len+1)//2):
+                    if tri_pad[pad_idx]:
+                        break
+                    if ent_idx != 0:
+                        pad_idx += 1
+                    test_triplet = torch.tensor([tri])
+                    
+                    mask_locs = torch.full((1,(KG.max_len-3)//2+1), False)
+                    if ent_idx < 2:
+                        mask_locs[0,0] = True
                     else:
-                        sq_error = (score_num[0,2,tri[ent_idx*2]-KG.num_ent] - tri_num[ent_idx-1])**2
-                    nvp_all_se += sq_error
-                    nvp_all_se_num += 1
-                else:
-                    test_triplet[0,2*ent_idx] = KG.num_ent+KG.num_rel
+                        mask_locs[0,ent_idx-1] = True
+                    if tri[ent_idx*2] >= KG.num_ent:
+                        assert ent_idx != 0
+                        test_num = torch.tensor([tri_num])
+                        test_num[0,ent_idx-1] = -1
+                        _,_,score_num = model(test_triplet.cuda(), test_num.cuda(), torch.tensor([tri_pad]).cuda(), mask_locs)
+                        score_num = score_num.detach().cpu().numpy()
+                        if ent_idx == 1:
+                            sq_error = (score_num[0,3,tri[ent_idx*2]-KG.num_ent] - tri_num[ent_idx-1])**2
+                            nvp_tri_se += sq_error
+                            nvp_tri_se_num += 1
+                        else:
+                            sq_error = (score_num[0,2,tri[ent_idx*2]-KG.num_ent] - tri_num[ent_idx-1])**2
+                        nvp_all_se += sq_error
+                        nvp_all_se_num += 1
+                    else:
+                        test_triplet[0,2*ent_idx] = KG.num_ent+KG.num_rel
+                        filt_tri = copy.deepcopy(tri)
+                        filt_tri[ent_idx*2] = 2*(KG.num_ent+KG.num_rel)
+                        if ent_idx != 1 and filt_tri[2] >= KG.num_ent:
+                            re_pair = [(filt_tri[0], filt_tri[1], filt_tri[1] * 2 + tri_num[0])]
+                        else:
+                            re_pair = [(filt_tri[0], filt_tri[1], filt_tri[2])]
+                        for qual_idx,(q,v) in enumerate(zip(filt_tri[3::2], filt_tri[4::2])):
+                            if tri_pad[qual_idx+1]:
+                                break
+                            if ent_idx != qual_idx + 2 and v >= KG.num_ent:
+                                re_pair.append((q, q*2 + tri_num[qual_idx + 1]))
+                            else:
+                                re_pair.append((q,v))
+                        re_pair.sort()
+                        filt = KG.filter_dict[tuple(re_pair)]
+                        score_ent, _, _ = model(test_triplet.cuda(), torch.tensor([tri_num]).cuda(), torch.tensor([tri_pad]).cuda(), mask_locs)
+                        score_ent = score_ent.detach().cpu().numpy()
+                        if ent_idx < 2:
+                            rank = calculate_rank(score_ent[0,1+2*ent_idx],tri[ent_idx*2], filt)
+                            lp_tri_list_rank.append(rank)
+                        else:
+                            rank = calculate_rank(score_ent[0,2], tri[ent_idx*2], filt)
+                        lp_all_list_rank.append(rank)
+                for rel_idx in range(tri_len//2):
+                    if tri_pad[rel_idx]:
+                        break
+                    mask_locs = torch.full((1,(KG.max_len-3)//2+1), False)
+                    mask_locs[0,rel_idx] = True
+                    test_triplet = torch.tensor([tri])
+                    orig_rels = tri[1::2]
+                    test_triplet[0, rel_idx*2 + 1] = KG.num_rel
+                    if test_triplet[0, rel_idx*2+2] >= KG.num_ent:
+                        test_triplet[0, rel_idx*2 + 2] = KG.num_ent + KG.num_rel
                     filt_tri = copy.deepcopy(tri)
-                    filt_tri[ent_idx*2] = 2*(KG.num_ent+KG.num_rel)
-                    if ent_idx != 1 and filt_tri[2] >= KG.num_ent:
-                        re_pair = [(filt_tri[0], filt_tri[1], filt_tri[1] * 2 + tri_num[0])]
+                    filt_tri[rel_idx*2+1] = 2*(KG.num_ent+KG.num_rel)
+                    if filt_tri[2] >= KG.num_ent:
+                        re_pair = [(filt_tri[0], filt_tri[1], orig_rels[0]*2 + tri_num[0])]
                     else:
                         re_pair = [(filt_tri[0], filt_tri[1], filt_tri[2])]
                     for qual_idx,(q,v) in enumerate(zip(filt_tri[3::2], filt_tri[4::2])):
                         if tri_pad[qual_idx+1]:
                             break
-                        if ent_idx != qual_idx + 2 and v >= KG.num_ent:
-                            re_pair.append((q, q*2 + tri_num[qual_idx + 1]))
+                        if v >= KG.num_ent:
+                            re_pair.append((q, orig_rels[qual_idx + 1]*2 + tri_num[qual_idx + 1]))
                         else:
                             re_pair.append((q,v))
                     re_pair.sort()
                     filt = KG.filter_dict[tuple(re_pair)]
-                    score_ent, _, _ = model(test_triplet.cuda(), torch.tensor([tri_num]).cuda(), torch.tensor([tri_pad]).cuda(), mask_locs)
-                    score_ent = score_ent.detach().cpu().numpy()
-                    if ent_idx < 2:
-                        rank = calculate_rank(score_ent[0,1+2*ent_idx],tri[ent_idx*2], filt)
-                        lp_tri_list_rank.append(rank)
+                    _,score_rel, _ = model(test_triplet.cuda(), torch.tensor([tri_num]).cuda(), torch.tensor([tri_pad]).cuda(), mask_locs)
+                    score_rel = score_rel.detach().cpu().numpy()
+                    if rel_idx == 0:
+                        rank = calculate_rank(score_rel[0,2], tri[rel_idx*2+1], filt)
+                        rp_tri_list_rank.append(rank)
                     else:
-                        rank = calculate_rank(score_ent[0,2], tri[ent_idx*2], filt)
-                    lp_all_list_rank.append(rank)
-            for rel_idx in range(tri_len//2):
-                if tri_pad[rel_idx]:
-                    break
-                mask_locs = torch.full((1,(KG.max_len-3)//2+1), False)
-                mask_locs[0,rel_idx] = True
-                test_triplet = torch.tensor([tri])
-                orig_rels = tri[1::2]
-                test_triplet[0, rel_idx*2 + 1] = KG.num_rel
-                if test_triplet[0, rel_idx*2+2] >= KG.num_ent:
-                    test_triplet[0, rel_idx*2 + 2] = KG.num_ent + KG.num_rel
-                filt_tri = copy.deepcopy(tri)
-                filt_tri[rel_idx*2+1] = 2*(KG.num_ent+KG.num_rel)
-                if filt_tri[2] >= KG.num_ent:
-                    re_pair = [(filt_tri[0], filt_tri[1], orig_rels[0]*2 + tri_num[0])]
-                else:
-                    re_pair = [(filt_tri[0], filt_tri[1], filt_tri[2])]
-                for qual_idx,(q,v) in enumerate(zip(filt_tri[3::2], filt_tri[4::2])):
-                    if tri_pad[qual_idx+1]:
-                        break
-                    if v >= KG.num_ent:
-                        re_pair.append((q, orig_rels[qual_idx + 1]*2 + tri_num[qual_idx + 1]))
-                    else:
-                        re_pair.append((q,v))
-                re_pair.sort()
-                filt = KG.filter_dict[tuple(re_pair)]
-                _,score_rel, _ = model(test_triplet.cuda(), torch.tensor([tri_num]).cuda(), torch.tensor([tri_pad]).cuda(), mask_locs)
-                score_rel = score_rel.detach().cpu().numpy()
-                if rel_idx == 0:
-                    rank = calculate_rank(score_rel[0,2], tri[rel_idx*2+1], filt)
-                    rp_tri_list_rank.append(rank)
-                else:
-                    rank = calculate_rank(score_rel[0,1], tri[rel_idx*2+1], filt)
-                rp_all_list_rank.append(rank)
-                
+                        rank = calculate_rank(score_rel[0,1], tri[rel_idx*2+1], filt)
+                    rp_all_list_rank.append(rank)
+                    
         lp_tri_list_rank = np.array(lp_tri_list_rank)
         lp_tri_mrr, lp_tri_hit10, lp_tri_hit3, lp_tri_hit1 = metrics(lp_tri_list_rank)
-        print("Link Prediction (Tri)")
-        print(f"MRR: {lp_tri_mrr:.6f}")
-        print(f"Hit@10: {lp_tri_hit10:.6f}")
-        print(f"Hit@3: {lp_tri_hit3:.6f}")
-        print(f"Hit@1: {lp_tri_hit1:.6f}")
+        print("Link Prediction on Validation Set (Tri)")
+        print(f"MRR: {lp_tri_mrr:.4f}")
+        print(f"Hit@10: {lp_tri_hit10:.4f}")
+        print(f"Hit@3: {lp_tri_hit3:.4f}")
+        print(f"Hit@1: {lp_tri_hit1:.4f}")
 
         lp_all_list_rank = np.array(lp_all_list_rank)
         lp_all_mrr, lp_all_hit10, lp_all_hit3, lp_all_hit1 = metrics(lp_all_list_rank)
-        print("Link Prediction (All)")
-        print(f"MRR: {lp_all_mrr:.6f}")
-        print(f"Hit@10: {lp_all_hit10:.6f}")
-        print(f"Hit@3: {lp_all_hit3:.6f}")
-        print(f"Hit@1: {lp_all_hit1:.6f}")
+        print("Link Prediction on Validation Set (All)")
+        print(f"MRR: {lp_all_mrr:.4f}")
+        print(f"Hit@10: {lp_all_hit10:.4f}")
+        print(f"Hit@3: {lp_all_hit3:.4f}")
+        print(f"Hit@1: {lp_all_hit1:.4f}")
     
         rp_tri_list_rank = np.array(rp_tri_list_rank)
         rp_tri_mrr, rp_tri_hit10, rp_tri_hit3, rp_tri_hit1 = metrics(rp_tri_list_rank)
-        print("Relation Prediction (Tri)")
-        print(f"MRR: {rp_tri_mrr:.6f}")
-        print(f"Hit@10: {rp_tri_hit10:.6f}")
-        print(f"Hit@3: {rp_tri_hit3:.6f}")
-        print(f"Hit@1: {rp_tri_hit1:.6f}")
+        print("Relation Prediction on Validation Set (Tri)")
+        print(f"MRR: {rp_tri_mrr:.4f}")
+        print(f"Hit@10: {rp_tri_hit10:.4f}")
+        print(f"Hit@3: {rp_tri_hit3:.4f}")
+        print(f"Hit@1: {rp_tri_hit1:.4f}")
 
         rp_all_list_rank = np.array(rp_all_list_rank)
         rp_all_mrr, rp_all_hit10, rp_all_hit3, rp_all_hit1 = metrics(rp_all_list_rank)
-        print("Relation Prediction (All)")
-        print(f"MRR: {rp_all_mrr:.6f}")
-        print(f"Hit@10: {rp_all_hit10:.6f}")
-        print(f"Hit@3: {rp_all_hit3:.6f}")
-        print(f"Hit@1: {rp_all_hit1:.6f}")
+        print("Relation Prediction on Validation Set (All)")
+        print(f"MRR: {rp_all_mrr:.4f}")
+        print(f"Hit@10: {rp_all_hit10:.4f}")
+        print(f"Hit@3: {rp_all_hit3:.4f}")
+        print(f"Hit@1: {rp_all_hit1:.4f}")
 
         if nvp_tri_se_num > 0:
             nvp_tri_rmse = math.sqrt(nvp_tri_se/nvp_tri_se_num)
-            print("Numeric Value Prediction (Tri)")
-            print(f"RMSE: {nvp_tri_rmse:.6f}")
+            print("Numeric Value Prediction on Validation Set (Tri)")
+            print(f"RMSE: {nvp_tri_rmse:.4f}")
 
         if nvp_all_se_num > 0:
             nvp_all_rmse = math.sqrt(nvp_all_se/nvp_all_se_num)
-            print("Numeric Value Prediction (All)")
-            print(f"RMSE: {nvp_all_rmse:.6f}")
+            print("Numeric Value Prediction on Validation Set (All)")
+            print(f"RMSE: {nvp_all_rmse:.4f}")
 
         if not args.no_write:
             with open(f"./result/{file_format}.txt", 'a') as f:
                 f.write(f"Epoch: {epoch+1}\n")
-                f.write(f"Link Prediction (Tri): {lp_tri_mrr:.6f} {lp_tri_hit10:.6f} {lp_tri_hit3:.6f} {lp_tri_hit1:.6f}\n")
-                f.write(f"Link Prediction (All): {lp_all_mrr:.6f} {lp_all_hit10:.6f} {lp_all_hit3:.6f} {lp_all_hit1:.6f}\n")
-                f.write(f"Relation Prediction (Tri): {rp_tri_mrr:.6f} {rp_tri_hit10:.6f} {rp_tri_hit3:.6f} {rp_tri_hit1:.6f}\n")
-                f.write(f"Relation Prediction (All): {rp_all_mrr:.6f} {rp_all_hit10:.6f} {rp_all_hit3:.6f} {rp_all_hit1:.6f}\n")
+                f.write(f"Link Prediction on Validation Set (Tri): {lp_tri_mrr:.4f} {lp_tri_hit10:.4f} {lp_tri_hit3:.4f} {lp_tri_hit1:.4f}\n")
+                f.write(f"Link Prediction on Validation Set (All): {lp_all_mrr:.4f} {lp_all_hit10:.4f} {lp_all_hit3:.4f} {lp_all_hit1:.4f}\n")
+                f.write(f"Relation Prediction on Validation Set (Tri): {rp_tri_mrr:.4f} {rp_tri_hit10:.4f} {rp_tri_hit3:.4f} {rp_tri_hit1:.4f}\n")
+                f.write(f"Relation Prediction on Validation Set (All): {rp_all_mrr:.4f} {rp_all_hit10:.4f} {rp_all_hit3:.4f} {rp_all_hit1:.4f}\n")
                 if nvp_tri_se_num > 0:
-                    f.write(f"Numeric Value Prediction (Tri): {nvp_tri_rmse:.6f}\n")
+                    f.write(f"Numeric Value Prediction on Validation Set (Tri): {nvp_tri_rmse:.4f}\n")
                 if nvp_all_se_num > 0:
-                    f.write(f"Numeric Value Prediction (All): {nvp_all_rmse:.6f}\n")
+                    f.write(f"Numeric Value Prediction on Validation Set (All): {nvp_all_rmse:.4f}\n")
                     
             
             torch.save({'model_state_dict': model.state_dict(), 'optimizer_state_dict': optimizer.state_dict()},
