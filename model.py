@@ -5,12 +5,13 @@ import math
 import time
 
 class HyNT(nn.Module):
-    def __init__(self, num_ent, num_rel, dim_model, num_head, dim_hid, num_layer, dropout = 0.1):
+    def __init__(self, num_ent, num_rel, dim_model, num_head, dim_hid, num_enc_layer, num_dec_layer, dropout = 0.1, emb_as_proj = False):
         super(HyNT, self).__init__()
         self.dim_model = dim_model
         self.num_head = num_head
         self.dim_hid = dim_hid
-        self.num_layer = num_layer
+        self.num_enc_layer = num_enc_layer
+        self.num_dec_layer = num_dec_layer
         self.dropout = dropout
         self.pri_pos = nn.Parameter(torch.Tensor(1, 1, dim_model))
         self.qv_pos = nn.Parameter(torch.Tensor(1, 1, dim_model))
@@ -32,9 +33,12 @@ class HyNT(nn.Module):
         self.num_mask = nn.Parameter(torch.tensor(0.5))
 
         encoder_layer = nn.TransformerEncoderLayer(dim_model, num_head, dim_hid, dropout, batch_first = True)
-        self.encoder = nn.TransformerEncoder(encoder_layer, num_layer)
+        self.encoder = nn.TransformerEncoder(encoder_layer, num_enc_layer)
         decoder_layer = nn.TransformerEncoderLayer(dim_model, num_head, dim_hid, dropout, batch_first = True)
-        self.decoder = nn.TransformerEncoder(decoder_layer, num_layer)
+        self.decoder = nn.TransformerEncoder(decoder_layer, num_dec_layer)
+
+        self.emb_as_proj = emb_as_proj
+        self.num_ent = num_ent
 
         self.init_weights()
 
@@ -82,4 +86,9 @@ class HyNT(nn.Module):
         dec_in_mask = torch.full((batch_size,4),False).cuda()
         dec_in_mask[torch.nonzero(mask_locs==1)[:,1]!=0,3] = True
         dec_out_seq = self.decoder(dec_in_seq, src_key_padding_mask = dec_in_mask)
-        return self.ent_dec(dec_out_seq), self.rel_dec(dec_out_seq), self.num_dec(dec_out_seq)
+        
+        if self.emb_as_proj:
+            ent_out = torch.matmul(dec_out_seq, self.ent_embeddings.weight[:self.num_ent].T) + self.ent_dec.bias
+        else:
+            ent_out = self.ent_dec(dec_out_seq)
+        return ent_out, self.rel_dec(dec_out_seq), self.num_dec(dec_out_seq)
