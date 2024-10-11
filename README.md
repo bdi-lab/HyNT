@@ -23,6 +23,11 @@ We have re-uploaded our codes after fixing a bug in filter_dict.
 
 The link prediction results on HN-KGs are updated, while the other experimental results remain the same. You can find the updated results in https://arxiv.org/abs/2305.18256.
 
+## Updates on Oct. 11th, 2024
+
+We have added a checkpoint file for WD50K by training HyNT using both the training and validation sets.
+The experimental results can be found on [arXiv](https://arxiv.org/abs/2305.18256).
+
 ## Requirements
 
 We used python 3.7 and PyTorch 1.12.0 with cudatoolkit 11.3.
@@ -37,7 +42,7 @@ pip install -r requirements.txt
 
 We used NVIDIA RTX A6000, NVIDIA GeForce RTX 3090 or NVIDIA GeForce RTX 2080Ti for all our experiments. We provide the checkpoints to produce the link prediction, relation prediction, and numeric value prediction results on HN-WK, HN-YG, HN-FB, and HN-FB-S. The checkpoints are also provided for the link prediction results on WD50K and WikiPeople<sup>$\mathbf{-}$</sup>. If you want to use the checkpoints, place the unzipped checkpoint folder in the same directory with the codes.
 
-You can download the checkpoints from https://drive.google.com/file/d/1i-tVAuPl23NbgQgppOeMedhGJtdccRcp/view?usp=sharing.
+You can download the checkpoints from https://drive.google.com/file/d/1CY6S6iBm63Bp3Fl3HjB9s4DSNVEkB-FG/view?usp=sharing.
 
 The commands to reproduce the results in our paper:
 
@@ -136,6 +141,14 @@ python3 eval.py --data WikiPeople- --lr 1e-3 --dim 256 --epoch 350 --exp KDD --n
 
 ```python
 python3 eval.py --data WD50K --lr 1e-3 --dim 256 --epoch 350 --exp KDD --num_enc_layer 3 --num_dec_layer 3 --num_head 4 --hidden_dim 1024 --dropout 0.2 --smoothing 0.7 --batch_size 2048 --step_size 50 --lp
+```
+
+### WD50K-test
+
+#### Link Prediction
+
+```python
+python3 eval.py --data WD50K-test --lr 1e-3 --dim 256 --epoch 350 --exp KDD --num_enc_layer 3 --num_dec_layer 3 --num_head 4 --hidden_dim 1024 --dropout 0.2 --smoothing 0.7 --batch_size 2048 --step_size 50 --lp
 ```
 
 ## Training from Scratch
