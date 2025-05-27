@@ -263,3 +263,6 @@ We tuned HyNT on each dataset with the following tuning range:
 ## Generating Datasets
 
 You can download the codes for generating datasets from https://drive.google.com/file/d/1NOThGP_wXdQeGgEGut3Pzn-Jth96jIIs/view?usp=sharing.
+
+## License
+Our datasets and codes are released under the CC BY-NC-SA 4.0 license.
